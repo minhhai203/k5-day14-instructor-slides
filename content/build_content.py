@@ -92,7 +92,7 @@ python check_production_ready.py
 </div>
 <div class="facts">
   <section><h2>Hình thức</h2><p>Bài cá nhân. 4 giờ tại lớp. Mock LLM, không cần API key LLM.</p></section>
-  <section><h2>Chấm điểm</h2><p>Tổng thô 120, quy về thang 100. Đạt: 70/100.</p></section>
+  <section><h2>Chấm điểm</h2><p>Bài tối đa 120 điểm, đổi về thang 100. Cần 70/100 để qua.</p></section>
   <section><h2>Hạn nộp</h2><p>{{DEADLINE}} (GMT+7).</p></section>
   <section><h2>Phím</h2><p><kbd>←</kbd> <kbd>→</kbd>: đổi slide. <kbd>N</kbd>: ghi chú.</p></section>
 </div>
@@ -746,9 +746,9 @@ _rubric = "\n".join(
     for name, cp, pts in RUBRIC_ROWS
 )
 slide(
-    "Rubric: 120 điểm thô, quy về 100",
+    "Bảng điểm: tối đa 120, cần 70/100",
     f"""
-<h2 class="title">Rubric: 120 điểm thô, đạt 70/100</h2>
+<h2 class="title">Bảng điểm: tối đa 120 điểm, cần 70/100 để qua</h2>
 <div class="grid grid-rubric">
   <table class="data data--compact">
     <thead><tr><th>Hạng mục</th><th>Checkpoint</th><th>Điểm</th></tr></thead>
@@ -758,8 +758,8 @@ slide(
   </table>
   <div class="stack">
     <section class="panel">
-      <h3>Part 6 (60): đạt hoặc không, từng mục con</h3>
-      <p>Functional 15 · Docker &amp; cấu hình 10 · Security 15 · Reliability 10 · Deployment 10. Mục nào script báo ❌ hoặc ⚠️ thì mục con đó 0 điểm.</p>
+      <h3>Part 6 (60 điểm): làm đúng thì đủ điểm, sai thì 0</h3>
+      <p>Functional 15 · Docker &amp; cấu hình 10 · Security 15 · Reliability 10 · Deployment 10. Script chấm báo ❌ hoặc ⚠️ ở phần nào thì phần đó 0 điểm.</p>
     </section>
     <section class="anti">
       <h3>{{ICONS_ANTI}}Mất điểm khi</h3>
@@ -770,7 +770,7 @@ slide(
         <li>Repo Private: không chấm.</li>
       </ul>
     </section>
-    <p class="note">Điểm = Tổng thô × 100 / 120. Lab này không có bonus.</p>
+    <p class="note">Điểm cuối = điểm bài × 100 / 120. Ví dụ: 84/120 thành 70/100. Lab này không có điểm thưởng.</p>
   </div>
 </div>
 """,
