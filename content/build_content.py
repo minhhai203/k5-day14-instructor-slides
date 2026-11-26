@@ -96,11 +96,23 @@ def goal(text, label="Đạt khi"):
     return f'<p class="goal"><span class="goal-label">{label}</span><span class="goal-text">{text}</span></p>'
 
 
-def short_cp(title, when, steps, done_when):
+def mid(cmd=None, pitfalls=()):
+    """Middle row: the key commands next to the two or three most common mistakes."""
+    parts = []
+    if cmd:
+        parts.append(f'<pre class="code code--wrap">{cmd.strip()}</pre>')
+    if pitfalls:
+        li = "".join(f"<li>{x}</li>" for x in pitfalls)
+        parts.append(f'<section class="anti"><h3>{ICONS["anti"]}Lỗi hay gặp</h3><ul>{li}</ul></section>')
+    return f'<div class="mid">{"".join(parts)}</div>' if parts else ""
+
+
+def short_cp(title, when, steps, done_when, cmd=None, pitfalls=()):
     return f"""
 <h2 class="title">{title}</h2>
 <p class="when">{when}</p>
 {flow(*steps)}
+{mid(cmd, pitfalls)}
 {goal(done_when)}
 """
 
@@ -123,17 +135,26 @@ _timeline = "".join(
 
 SHORT = {
     0: """
-<div class="title-slide title-slide--short">
+<div class="title-slide">
   <div class="title-copy">
     <p class="course"><b>Day 14</b> · VinUni AI20k, K5 Level 3 · {{SESSION}}, {{SESSION_RANGE}}</p>
     <h1 class="hero">Đưa agent lên cloud. Đo nó. Giám sát nó.</h1>
-    <p class="lede">Từ agent chỉ chạy trên laptop → agent có URL public, đạt 12/12 tiêu chí.</p>
+    <p class="lede">Từ agent chỉ chạy trên laptop → agent có URL public, đạt 12/12 tiêu chí, có số đo tốc độ và độ đúng của chính bạn.</p>
   </div>
+  <figure class="title-proof">
+    <figcaption>Hai mốc phải đạt trong buổi:</figcaption>
+<pre class="code code--big"><span class="c"># CP5</span>
+python check_production_ready.py
+  → PASS 12/12
+<span class="c"># CP6 · URL public</span>
+/health 200 · /ask không key 401</pre>
+  </figure>
 </div>
-<div class="facts facts--3">
-  <section><h2>Hình thức</h2><p>Cá nhân · 4 giờ</p></section>
+<div class="facts">
+  <section><h2>Hình thức</h2><p>Cá nhân · 4 giờ · không cần API key LLM</p></section>
   <section><h2>Qua môn</h2><p>70/100</p></section>
-  <section><h2>Hạn nộp</h2><p>{{DEADLINE}}</p></section>
+  <section><h2>Hạn nộp</h2><p>{{DEADLINE}} (GMT+7)</p></section>
+  <section><h2>Phím</h2><p><kbd>←</kbd> <kbd>→</kbd> đổi slide · <kbd>D</kbd> chi tiết</p></section>
 </div>
 """,
     1: f"""
@@ -148,24 +169,46 @@ SHORT = {
     ("Đo", "Tốc độ · độ đúng"),
     cls="flow--7",
 )}
-{goal("Part 1–5 chạy thử và trả lời. Part 6 viết code. Deploy một lần, sau Part 6.", "Lớp K5")}
+<div class="grid grid-2">
+  <section class="panel">
+    <h3>Lớp K5 làm khác đề gốc</h3>
+    <ul class="plain">
+      <li>Part 1, 2, 4, 5: chạy ví dụ có sẵn, trả lời câu hỏi.</li>
+      <li>Part 3 làm sau Part 6: deploy luôn agent Part 6.</li>
+      <li>Phần giám sát (Part 7 Bước 2) làm ở nhà.</li>
+    </ul>
+  </section>
+  <section class="panel panel--do">
+    <h3>Đọc theo thứ tự</h3>
+    <p>README → RULES → CHECKPOINTS → SUBMISSION → RUBRIC</p>
+    <p class="cp-ref">Lệnh nào chạy sai: xem mục “Lưu ý K5” trong README.</p>
+  </section>
+</div>
 """,
     2: f"""
 <h2 class="title">Lịch buổi lab</h2>
 <ol class="timeline">{_timeline}</ol>
 <p class="tl-after"><b>CP8</b> Giám sát: làm ở nhà, trước {{{{DEADLINE}}}}.</p>
-{goal("Kẹt quá 10 phút → gọi Lab Coach, ghi lỗi, đi tiếp.", "Quy tắc")}
+<div class="grid grid-2">
+  {goal("15:50 cả lớp sang CP5, kể cả khi phần trước chưa xong.", "Mốc cứng")}
+  {goal("Kẹt quá 10 phút → gọi Lab Coach, ghi lỗi, đi tiếp.", "Quy tắc")}
+</div>
 """,
     3: f"""
 <h2 class="title">Tạo repo bài làm</h2>
 {flow(
     ("Fork", "Repo đề bài"),
-    ("Đổi tên", "Theo mẫu"),
+    ("Đổi tên", "Settings → Repository name"),
     ("Clone", "Bản fork"),
     ("Để Public", "Coach mở được", "key"),
-    ("Nộp link", "Trên LMS"),
+    ("Nộp link", "Trên LMS, không nộp zip"),
 )}
 <pre class="code code--wrap code--one">K5-L3A-DAY14-HoVaTen-MSSV-Deployment-Benchmark-Observability</pre>
+<section class="anti"><h3>{ICONS["anti"]}Lỗi hay gặp</h3><ul>
+  <li>Làm trên repo đề bài, không phải bản fork.</li>
+  <li>Để Private: không mở được thì không chấm.</li>
+  <li>Copy code Part 6 ra ngoài <code>06-lab-complete/</code>.</li>
+</ul></section>
 """,
     4: """
 <h2 class="title">Luật làm bài</h2>
@@ -173,129 +216,177 @@ SHORT = {
   <section class="do">
     <h3>Được</h3>
     <ul>
-      <li>Hỏi AI, nhờ AI đọc lỗi</li>
+      <li>Hỏi AI, nhờ AI đọc lỗi. Ghi lại vào mục AI log.</li>
       <li>Chạy script chấm nhiều lần</li>
       <li>Để key trong biến môi trường</li>
+      <li>Thảo luận với bạn</li>
     </ul>
   </section>
   <section class="dont">
     <h3>Không được</h3>
     <ul>
-      <li>Bịa số đo</li>
-      <li>Sửa script chấm, sửa bộ câu hỏi</li>
+      <li>Bịa số đo (MB, tốc độ, độ đúng)</li>
+      <li>Sửa script chấm <em>(Part 6 = 0)</em>, sửa bộ câu hỏi</li>
       <li>Commit <code>.env</code>, key, token <em>(−10)</em></li>
+      <li>Dùng chung URL, ảnh, báo cáo của bạn</li>
     </ul>
   </section>
 </div>
+<p class="note">Lỡ commit key: đổi key mới ngay rồi báo Lab Coach. Xoá file thôi chưa đủ.</p>
 """,
     5: """
-<h2 class="title">Bốn lưu ý trước khi gõ lệnh</h2>
-<ol class="cards">
-  <li><b>Windows</b><span>Chạy trong WSL2</span></li>
-  <li><b>Cổng 8000</b><span>Tắt server cũ trước</span></li>
-  <li><b>Docker Compose</b><span>Luôn có <code>-p</code> và <code>--build</code></span></li>
-  <li><b>Lệnh lỗi?</b><span>Xem mục “Lưu ý K5” trong README</span></li>
+<h2 class="title">Lưu ý trước khi gõ lệnh</h2>
+<ol class="cards cards--3">
+  <li><b>Windows</b><span>Chạy trong WSL2. <code>python -c "import os; print(os.name)"</code> phải in <code>posix</code>.</span></li>
+  <li><b>Cổng 8000</b><span>Tắt server cũ (Ctrl+C) trước khi bật bản mới.</span></li>
+  <li><b>Part 1–2</b><span>Câu hỏi gửi qua URL: <code>/ask?question=Hello</code>. Gửi JSON ra 422.</span></li>
+  <li><b>Compose Part 2, 5</b><span>Chạy <code>touch .env.local</code> trước <code>up</code>.</span></li>
+  <li><b>Thư mục <code>production</code></b><span>Luôn có <code>-p</code> và <code>--build</code> như lệnh trên slide.</span></li>
+  <li><b>Part 5</b><span>Cổng <b>8080</b>, endpoint <b><code>POST /chat</code></b>.</span></li>
 </ol>
 """,
     6: short_cp(
         "CP0 · Chuẩn bị máy",
         "14:00–14:10",
-        [("Fork + đổi tên", None), ("Clone", None), ("Kiểm Python, Docker", None), ("Windows: WSL2", None, "key")],
-        "<code>docker run --rm hello-world</code> chạy được",
+        [("Fork + đổi tên", "Theo mẫu tên"), ("Clone", "Bản fork"), ("Kiểm Python, Docker", "3.11+, có Compose"), ("Windows: WSL2", "Phải in posix", "key")],
+        "<code>docker run --rm hello-world</code> chạy được · tạo sẵn tài khoản Railway hoặc Render",
+        cmd="""python --version                         <span class="c"># 3.11 trở lên</span>
+docker compose version
+docker run --rm hello-world
+python -c "import os; print(os.name)"    <span class="c"># Windows: posix</span>""",
+        pitfalls=("Clone repo đề bài thay vì bản fork.", "Docker Desktop chưa bật.", "Windows: chạy trong PowerShell thay vì WSL2."),
     ),
     7: short_cp(
         "CP1 · Laptop khác môi trường thật",
-        "14:10–14:30",
-        [("Chạy bản develop", None), ("Tìm ≥ 5 lỗi", "Kèm dòng code", "key"), ("So bản production", None), ("Ghi vào bài", None)],
-        "Mỗi lỗi chỉ ra được dòng code",
+        "14:10–14:30 · ghi vào MISSION_ANSWERS.md, Part 1",
+        [("Chạy bản develop", None), ("Tìm ≥ 5 lỗi", "Kèm dòng code", "key"), ("So bản production", "Bản đã sửa"), ("Ghi bảng so sánh", "Có cột “vì sao”")],
+        "Mỗi lỗi chỉ ra được dòng code và bản production sửa thế nào",
+        cmd="""cd 01-localhost-vs-production/develop
+pip install -r requirements.txt
+python app.py
+<span class="c"># terminal khác</span>
+curl -X POST "http://localhost:8000/ask?question=Hello\"""",
+        pitfalls=("Gửi JSON cho bản develop: ra 422.", "Liệt kê lỗi mà không chỉ dòng code."),
     ),
     8: short_cp(
         "CP2 · Đóng gói bằng Docker",
-        "14:30–15:00",
+        "14:30–15:00 · ghi vào MISSION_ANSWERS.md, Part 2",
         [("Build 2 image", "Từ gốc repo"), ("Tự đo MB", "Tính % nhỏ hơn", "key"), ("Chạy stack", "compose up"), ("Tắt", "compose down")],
-        "Số MB là số máy bạn đo",
+        "Số MB là số máy bạn đo, có sơ đồ các service của stack",
+        cmd="""<span class="c"># chạy từ GỐC repo</span>
+docker build -f 02-docker/develop/Dockerfile -t my-agent:develop .
+docker build -f 02-docker/production/Dockerfile -t my-agent:advanced .
+docker images | grep my-agent""",
+        pitfalls=("<code>cd</code> vào thư mục con rồi build: lỗi <code>COPY</code>.", "Quên <code>touch .env.local</code> trước <code>compose up</code>.", "Chép số MB của người khác."),
     ),
     9: short_cp(
         "CP3 · Ba lớp bảo vệ",
-        "15:00–15:25",
+        "15:00–15:25 · ghi vào MISSION_ANSWERS.md, Part 4",
         [("Không key", "→ 401"), ("Có key", "→ 200"), ("Gọi quá nhanh", "→ 429", "key"), ("Hết ngân sách", "→ 402")],
-        "Dán kết quả <code>curl -i</code> thấy 401 · 200 · 429",
+        "Dán kết quả <code>curl -i</code> thấy 401 · 200 · 429 (che token trước khi dán)",
+        cmd="""<span class="c"># bản develop</span>
+AGENT_API_KEY=secret-key-123 python app.py
+<span class="c"># bản production: lấy token ở POST /auth/token</span>
+<span class="c"># tài khoản student / demo123, giới hạn 10 request/phút</span>""",
+        pitfalls=("Gọi <code>/token</code> với <code>admin</code>/<code>secret</code>: sai endpoint.", "Quên tắt bản develop: hai app tranh cổng 8000."),
     ),
     10: short_cp(
         "CP4 · Chạy nhiều bản cùng lúc",
         "15:25–15:45 · nghỉ 5 phút",
-        [("Bật 3 bản agent", None), ("Gửi 5 câu", "Cùng một phiên"), ("Lịch sử vẫn còn", "Nhờ Redis", "key"), ("Tắt stack", None)],
-        "Giải thích được vì sao lịch sử không mất",
+        [("Bật 3 bản agent", "Sau Nginx"), ("Gửi 5 câu", "Cùng một phiên"), ("Lịch sử vẫn còn", "Nhờ Redis", "key"), ("Tắt stack", "Trả cổng, RAM")],
+        "Giải thích được vì sao lịch sử không mất khi câu hỏi rơi vào bản khác",
+        cmd="""cd 05-scaling-reliability/production && touch .env.local
+docker compose -p k5-day14-scaling up -d --build --scale agent=3
+python test_stateless.py
+docker compose -p k5-day14-scaling down""",
+        pitfalls=("Bỏ <code>-p</code>: chạy nhầm image của bài trước.", "Gọi cổng 80 và <code>/ask</code>: stack này dùng 8080 và <code>/chat</code>."),
     ),
-    11: f"""
-<h2 class="title">CP5 · Phần chính: PASS 12/12</h2>
-<p class="when">15:50–16:50 · 60/120 điểm</p>
-{flow(
-    ("Đọc bảng tiêu chí", None),
-    ("Sửa TODO", None),
-    ("Chạy script chấm", None),
-    ("Lặp lại", "Tới 12/12", "key"),
-    cls="flow--loop",
-)}
-<p class="big-result"><code>python check_production_ready.py</code> → <b>PASS 12/12</b></p>
-""",
+    11: short_cp(
+        "CP5 · Phần chính: PASS 12/12",
+        "15:50–16:50 · 60/120 điểm · làm trong <code>06-lab-complete/</code>",
+        [("Đọc bảng tiêu chí", "Trong README thư mục"), ("Sửa TODO", "Từng file"), ("Chạy script chấm", "Sau mỗi bước"), ("Lặp lại", "Tới 12/12", "key")],
+        "<code>python check_production_ready.py</code> (bản đầy đủ) in <b>PASS 12/12</b>. Mục ⚠️ cũng là chưa đạt.",
+        cmd="""cd 06-lab-complete
+python check_production_ready.py --static-only   <span class="c"># chạy sớm</span>
+python check_production_ready.py --skip-docker   <span class="c"># nhanh</span>
+python check_production_ready.py                 <span class="c"># bản đầy đủ</span>""",
+        pitfalls=("Sửa script chấm để lấy PASS: Part 6 = 0.", "<code>/health</code> trả 503 khi mất Redis (đó là việc của <code>/ready</code>).", "Windows ngoài WSL2: không bao giờ đạt 12/12."),
+    ),
     12: """
 <h2 class="title">CP5 · Script chấm kiểm gì</h2>
 <ul class="chips">
-  <li><b>/health</b><span>luôn 200</span></li>
+  <li><b>/health</b><span>luôn 200, kể cả khi chưa có Redis</span></li>
   <li><b>/ready</b><span>503 khi mất Redis</span></li>
-  <li><b>/ask</b><span>200</span></li>
+  <li><b>/ask</b><span>nhận JSON, trả 200</span></li>
   <li><b>Không key</b><span>401</span></li>
-  <li><b>Gọi quá nhanh</b><span>429</span></li>
+  <li><b>Gọi quá nhanh</b><span>429, đếm trong Redis</span></li>
   <li><b>Hết ngân sách</b><span>402</span></li>
-  <li><b>Log</b><span>mỗi dòng là JSON</span></li>
-  <li><b>Tắt máy</b><span>xử lý xong rồi mới thoát</span></li>
-  <li><b>Image</b><span>slim · non-root · &lt; 500 MB</span></li>
-  <li><b>Deploy config</b><span>có health check</span></li>
+  <li><b>Log</b><span>mỗi dòng là một JSON</span></li>
+  <li><b>Tắt máy</b><span>xử lý xong request rồi mới thoát</span></li>
+  <li><b>Image</b><span>multi-stage · slim · non-root · &lt; 500 MB</span></li>
+  <li><b>Deploy config</b><span>compose có Redis, có health check</span></li>
 </ul>
+<p class="note">Script báo ❌ hoặc ⚠️ ở mục nào thì quay lại đúng thẻ đó. Bảng đầy đủ: bấm Chi tiết.</p>
 """,
     13: short_cp(
         "CP6 · Đưa agent lên mạng",
-        "16:50–17:15 · Railway hoặc Render",
-        [("Tạo Redis", "Trên nền tảng"), ("Đặt biến môi trường", "REDIS_URL, API key"), ("Deploy", "Agent Part 6", "key"), ("Tự kiểm", "4 lệnh")],
-        "4 lệnh ra <b>200 · 200 · 401 · 200</b>",
+        "16:50–17:15 · Railway hoặc Render · ghi vào DEPLOYMENT.md",
+        [("Tạo Redis", "Trên nền tảng"), ("Đặt biến môi trường", "REDIS_URL, AGENT_API_KEY"), ("Deploy", "Agent Part 6", "key"), ("Tự kiểm", "4 lệnh trong CHECKPOINTS")],
+        "4 lệnh ra <b>200 · 200 · 401 · 200</b>, URL ghi vào <code>DEPLOYMENT.md</code>",
+        cmd="""cd 06-lab-complete && railway up
+<span class="c"># tự kiểm (đủ 4 lệnh ở CP6 trong CHECKPOINTS.md)</span>
+/health → 200      /ready → 200
+/ask không key → 401   /ask có key → 200""",
+        pitfalls=("Deploy app mẫu <code>03-cloud-deployment/</code>.", "Không tạo Redis: <code>/ready</code> trả 503.", "Viết key thẳng vào code."),
     ),
     14: short_cp(
         "CP7 · Đo tốc độ và độ đúng",
-        "17:15–18:00",
-        [("Bật v1, v2", None), ("Đo tải", "1 · 10 · 50 · 100 người"), ("Chấm v1 vs v2", None), ("Sửa kiến thức", "Chấm lại tới 100%", "key")],
-        "Quality gate <b>PASS</b>, file JSON trong <code>reports/</code>",
+        "17:15–18:00 · ghi vào BENCHMARK_REPORT.md",
+        [("Bật v1, v2", "Cổng 8001, 8002"), ("Đo tải", "1 · 10 · 50 · 100 người"), ("Chấm v1 vs v2", "Cùng bộ câu hỏi"), ("Sửa kiến thức", "Chấm lại tới 100%", "key")],
+        "Quality gate <b>PASS</b>, đủ file JSON trong <code>reports/</code>",
+        cmd="""cd 06-lab-complete/benchmark-observability/develop
+AGENT_VERSION=v2 PORT=8002 python app.py
+python load_test.py --url http://localhost:8002 --requests 300 \\
+  --concurrency 10 --out reports/load_v2_c10.json""",
+        pitfalls=("Quên <code>--out</code>: không có file để nộp.", "Chấm mà quên <code>--url http://localhost:8002</code>: gọi nhầm cổng 8000.", "Sửa bộ câu hỏi thay vì <code>KNOWLEDGE_BASE</code>."),
     ),
     15: short_cp(
         "CP8 · Giám sát (làm ở nhà)",
         "Sau 18:00, trước hạn nộp",
-        [("Bật stack giám sát", None), ("Tạo tải", "1 bản rồi 3 bản"), ("Tìm request chậm, lỗi", None), ("Kích ≥ 2 cảnh báo", None), ("Chụp ảnh", "Rồi mới tắt", "key")],
-        "2 file CSV + 4 ảnh",
+        [("Bật stack giám sát", "6 dịch vụ"), ("Tạo tải", "1 bản rồi 3 bản"), ("Tìm request chậm, lỗi", "Trong Jaeger"), ("Kích ≥ 2 cảnh báo", "Ghi thời gian"), ("Chụp ảnh", "Rồi mới tắt", "key")],
+        "2 file CSV + 4 ảnh (Grafana, 2 trace, trang Alerts)",
+        cmd="""docker compose -p k5-day14-observability up -d --build --scale agent=1
+<span class="c"># Locust headless, --csv /mnt/results/scale_1</span>
+docker compose -p k5-day14-observability up -d --scale agent=3
+<span class="c"># chạy lại Locust, --csv /mnt/results/scale_3</span>""",
+        pitfalls=("Dùng Locust giao diện web: không có CSV.", "Tắt stack trước khi chụp ảnh.", "Số trong báo cáo không khớp CSV: mục đó 0."),
     ),
     16: """
 <h2 class="title">Bảng điểm</h2>
 <ol class="score">
   <li style="--v:40"><b>40</b><span>Part 1–5</span><small>8 điểm mỗi phần</small></li>
-  <li style="--v:60" class="is-key"><b>60</b><span>Part 6 · Final</span><small>Đúng đủ điểm, sai 0</small></li>
-  <li style="--v:20"><b>20</b><span>Part 7 · Đo, giám sát</span><small>Số phải khớp file</small></li>
+  <li style="--v:60" class="is-key"><b>60</b><span>Part 6 · Final</span><small>Chức năng 15 · Docker 10 · Bảo mật 15 · Ổn định 10 · Deploy 10 — đúng đủ điểm, sai 0</small></li>
+  <li style="--v:20"><b>20</b><span>Part 7 · Đo, giám sát</span><small>Đo tải 4 · Chấm độ đúng 5 · Giám sát 4 · Trace 3 · Cảnh báo 4</small></li>
 </ol>
-<p class="score-note">Tối đa 120 → đổi về thang 100 · <b>cần 70 để qua</b></p>
-<p class="minus"><b>Bị trừ:</b> lộ key −10 · sai tên repo −5 · repo Private: không chấm</p>
+<p class="score-note">Tối đa 120 → đổi về thang 100 · <b>cần 70 để qua</b> (ví dụ 84/120 = 70/100)</p>
+<p class="minus"><b>Bị trừ:</b> lộ key −10 · sai tên repo, sai chỗ file −5 · số không khớp file: mục đó 0 · repo Private: không chấm</p>
 """,
     17: """
 <h2 class="title">Trước khi nộp</h2>
 <div class="grid grid-2">
   <ul class="checklist">
-    <li>Repo đúng tên, Public</li>
-    <li>PASS 12/12</li>
-    <li>URL chạy được</li>
-    <li>Báo cáo + ảnh đủ, số khớp file</li>
-    <li>Không có <code>.env</code>, key</li>
+    <li>Repo đúng tên, Public, mở ẩn danh không 404</li>
+    <li><code>check_production_ready.py</code>: PASS 12/12</li>
+    <li><code>MISSION_ANSWERS.md</code>: Part 1–5 + mục AI log</li>
+    <li><code>DEPLOYMENT.md</code>: URL chạy được</li>
+    <li>Báo cáo, JSON, CSV, 7 ảnh đủ; số khớp file</li>
+    <li>Không có <code>.env</code>, key trong lịch sử commit</li>
   </ul>
   <div class="stack">
     <section class="panel">
       <h3>Hạn nộp (GMT+7)</h3>
       <p class="deadline">{{DEADLINE}}</p>
+      <p>Nộp link repo trên LMS. Commit cuối trước hạn là bản được chấm.</p>
     </section>
     <div class="cta-row">
       <button class="btn-primary" type="button" onclick="window.kickoffLab && window.kickoffLab()">Bắt đầu CP0</button>
@@ -304,6 +395,7 @@ SHORT = {
 </div>
 """,
 }
+
 
 # 0 ── Title ─────────────────────────────────────────────────────────────
 slide(

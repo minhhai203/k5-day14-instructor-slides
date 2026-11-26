@@ -1463,6 +1463,30 @@ button:disabled {
   grid-template-columns: minmax(0, 1fr);
 }
 
+/* Middle row: key commands beside common mistakes */
+.mid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: stretch;
+}
+
+.mid .code {
+  margin: 0;
+}
+
+.cards--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cards--3 b {
+  font-size: 1.25rem;
+}
+
+.cards--3 span {
+  font-size: 1.05rem;
+}
+
 /* Detail sheet */
 .btn-detail {
   padding: 0.45rem 1rem;
@@ -1723,6 +1747,7 @@ button:disabled {
   .loop--flow,
   .dodont,
   .cards,
+  .mid,
   .chips {
     grid-template-columns: minmax(0, 1fr);
   }
