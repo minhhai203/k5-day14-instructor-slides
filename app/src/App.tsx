@@ -9,7 +9,7 @@ import {
 import rawSlides from './slides/content.json'
 import { Maximize, Minimize, Music, NotebookText, Volume2, VolumeX } from 'lucide-react'
 import logoUrl from './assets/logo-vingroup-vinuni.png'
-import { fitAll } from './fit'
+import { fitAll, fitSlide } from './fit'
 import {
   SESSION_LABEL,
   clearSessionInUrl,
@@ -34,6 +34,7 @@ type SlideData = {
   index: number
   title: string
   html: string
+  detail: string | null
   notes: string
   activeCp: string | null
   timerMin: number | null
@@ -85,6 +86,7 @@ export default function App() {
         ...s,
         title: localize(s.title, session),
         html: localize(s.html, session),
+        detail: s.detail ? localize(s.detail, session) : null,
         notes: localize(s.notes, session),
       })),
     [session],
@@ -105,6 +107,8 @@ export default function App() {
   }
   const [index, setIndex] = useState(0)
   const [notesOpen, setNotesOpen] = useState(false)
+  const [detailOpen, setDetailOpen] = useState(false)
+  const detailRef = useRef<HTMLDivElement>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   useEffect(() => {
     const onFs = () => setIsFullscreen(Boolean(document.fullscreenElement))
@@ -145,6 +149,23 @@ export default function App() {
 
   const current = slides[index]
   const total = slides.length
+
+  // The detail sheet belongs to one slide: close it when the slide changes.
+  useEffect(() => {
+    setDetailOpen(false)
+  }, [index])
+
+  // Fit the detail sheet like a slide; it scrolls if it still does not fit.
+  useLayoutEffect(() => {
+    if (!detailOpen) return
+    const sheet = detailRef.current
+    const inner = sheet?.querySelector<HTMLElement>('.slide-inner')
+    if (!sheet || !inner) return
+    const fitNow = () => fitSlide(sheet, inner)
+    fitNow()
+    window.addEventListener('resize', fitNow)
+    return () => window.removeEventListener('resize', fitNow)
+  }, [detailOpen, current])
 
   useEffect(() => {
     loadPrefs()
@@ -264,6 +285,14 @@ export default function App() {
           e.preventDefault()
           go(total - 1)
           break
+        case 'd':
+        case 'D':
+          e.preventDefault()
+          if (current?.detail) setDetailOpen((v) => !v)
+          break
+        case 'Escape':
+          setDetailOpen(false)
+          break
         case 'n':
         case 'N':
           e.preventDefault()
@@ -314,7 +343,7 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional key handler deps
-  }, [go, index, total, totalSec, musicOn, reduced, sfxOn])
+  }, [go, index, total, totalSec, musicOn, reduced, sfxOn, current])
 
   useEffect(() => {
     ;(window as unknown as { kickoffLab?: () => void }).kickoffLab = kickoffLab
@@ -512,6 +541,21 @@ export default function App() {
         ))}
       </main>
 
+      {detailOpen && current?.detail && (
+        <div
+          className="detail-sheet"
+          ref={detailRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Chi tiết: ${current.title}`}
+        >
+          <button type="button" className="btn-ghost detail-close" onClick={() => setDetailOpen(false)}>
+            Đóng <kbd>Esc</kbd>
+          </button>
+          <div className="slide-inner" dangerouslySetInnerHTML={{ __html: current.detail }} />
+        </div>
+      )}
+
       <footer className="deck-footer">
         <span className="slide-counter">
           {index + 1} / {total}
@@ -530,6 +574,16 @@ export default function App() {
           ))}
         </div>
         <div className="nav-buttons">
+          {current?.detail && (
+            <button
+              type="button"
+              className="btn-detail"
+              aria-expanded={detailOpen}
+              onClick={() => setDetailOpen((v) => !v)}
+            >
+              {detailOpen ? 'Thu gọn' : 'Chi tiết'} <kbd>D</kbd>
+            </button>
+          )}
           <button type="button" className="btn-nav" disabled={index === 0} onClick={() => go(index - 1)}>
             Trước
           </button>

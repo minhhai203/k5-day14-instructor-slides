@@ -23,10 +23,15 @@ S = []
 
 
 def slide(title, html, notes, cp=None, minutes=None, label=None, done=None):
+    """Main view = SHORT[index] (title + workflow). The full text below each call goes behind "Chi tiết"."""
+    i = len(S)
+    full = html.strip().replace("{ICONS_ANTI}", ICONS["anti"])
+    short = SHORT.get(i)
     S.append({
-        "index": len(S),
+        "index": i,
         "title": title,
-        "html": html.strip().replace("{ICONS_ANTI}", ICONS["anti"]),
+        "html": short.strip() if short else full,
+        "detail": full if short else None,
         "notes": notes.strip(),
         "activeCp": cp,
         "timerMin": minutes,
@@ -71,6 +76,235 @@ def notes(title, *items):
 
 REPO = "https://github.com/VinUni-AI20k/K5-L3-Day14-Deployment-Agent-Benchmark-Observability"
 
+
+# ── Short main view ──────────────────────────────────────────────────────
+# Each slide shows only a title and a workflow. The full text (commands, pitfalls, self-check)
+# opens with the "Chi tiết" button or the D key.
+
+def flow(*steps, cls=""):
+    """steps: (label, sub) or (label, sub, "key") to highlight one step."""
+    li = []
+    for s in steps:
+        label, sub = s[0], s[1]
+        key = ' class="is-key"' if len(s) > 2 else ""
+        sub_html = f"<span>{sub}</span>" if sub else ""
+        li.append(f"<li{key}><b>{label}</b>{sub_html}</li>")
+    return f'<ol class="flow {cls}">{"".join(li)}</ol>'
+
+
+def goal(text, label="Đạt khi"):
+    return f'<p class="goal"><span class="goal-label">{label}</span><span class="goal-text">{text}</span></p>'
+
+
+def short_cp(title, when, steps, done_when):
+    return f"""
+<h2 class="title">{title}</h2>
+<p class="when">{when}</p>
+{flow(*steps)}
+{goal(done_when)}
+"""
+
+
+_TL = [
+    ("14:00", "CP0", "Setup", 10, ""),
+    ("14:10", "CP1", "Localhost", 20, ""),
+    ("14:30", "CP2", "Docker", 30, ""),
+    ("15:00", "CP3", "Bảo mật", 25, ""),
+    ("15:25", "CP4", "Scale", 20, ""),
+    ("15:45", "", "Nghỉ", 5, "is-break"),
+    ("15:50", "CP5", "Final 12/12", 60, "is-key"),
+    ("16:50", "CP6", "Deploy", 25, ""),
+    ("17:15", "CP7", "Đo", 45, ""),
+]
+_timeline = "".join(
+    f'<li class="{c}" style="--m:{m}"><span class="tl-time">{t}</span><b>{cp}</b><span class="tl-name">{n}</span></li>'
+    for t, cp, n, m, c in _TL
+)
+
+SHORT = {
+    0: """
+<div class="title-slide title-slide--short">
+  <div class="title-copy">
+    <p class="course"><b>Day 14</b> · VinUni AI20k, K5 Level 3 · {{SESSION}}, {{SESSION_RANGE}}</p>
+    <h1 class="hero">Đưa agent lên cloud. Đo nó. Giám sát nó.</h1>
+    <p class="lede">Từ agent chỉ chạy trên laptop → agent có URL public, đạt 12/12 tiêu chí.</p>
+  </div>
+</div>
+<div class="facts facts--3">
+  <section><h2>Hình thức</h2><p>Cá nhân · 4 giờ</p></section>
+  <section><h2>Qua môn</h2><p>70/100</p></section>
+  <section><h2>Hạn nộp</h2><p>{{DEADLINE}}</p></section>
+</div>
+""",
+    1: f"""
+<h2 class="title">Bảy phần, một agent</h2>
+{flow(
+    ("Localhost", "Tìm lỗi"),
+    ("Docker", "Đóng gói"),
+    ("Bảo mật", "Key · giới hạn"),
+    ("Scale", "Nhiều bản"),
+    ("Final", "12/12", "key"),
+    ("Deploy", "Lên mạng"),
+    ("Đo", "Tốc độ · độ đúng"),
+    cls="flow--7",
+)}
+{goal("Part 1–5 chạy thử và trả lời. Part 6 viết code. Deploy một lần, sau Part 6.", "Lớp K5")}
+""",
+    2: f"""
+<h2 class="title">Lịch buổi lab</h2>
+<ol class="timeline">{_timeline}</ol>
+<p class="tl-after"><b>CP8</b> Giám sát: làm ở nhà, trước {{{{DEADLINE}}}}.</p>
+{goal("Kẹt quá 10 phút → gọi Lab Coach, ghi lỗi, đi tiếp.", "Quy tắc")}
+""",
+    3: f"""
+<h2 class="title">Tạo repo bài làm</h2>
+{flow(
+    ("Fork", "Repo đề bài"),
+    ("Đổi tên", "Theo mẫu"),
+    ("Clone", "Bản fork"),
+    ("Để Public", "Coach mở được", "key"),
+    ("Nộp link", "Trên LMS"),
+)}
+<pre class="code code--wrap code--one">K5-L3A-DAY14-HoVaTen-MSSV-Deployment-Benchmark-Observability</pre>
+""",
+    4: """
+<h2 class="title">Luật làm bài</h2>
+<div class="dodont">
+  <section class="do">
+    <h3>Được</h3>
+    <ul>
+      <li>Hỏi AI, nhờ AI đọc lỗi</li>
+      <li>Chạy script chấm nhiều lần</li>
+      <li>Để key trong biến môi trường</li>
+    </ul>
+  </section>
+  <section class="dont">
+    <h3>Không được</h3>
+    <ul>
+      <li>Bịa số đo</li>
+      <li>Sửa script chấm, sửa bộ câu hỏi</li>
+      <li>Commit <code>.env</code>, key, token <em>(−10)</em></li>
+    </ul>
+  </section>
+</div>
+""",
+    5: """
+<h2 class="title">Bốn lưu ý trước khi gõ lệnh</h2>
+<ol class="cards">
+  <li><b>Windows</b><span>Chạy trong WSL2</span></li>
+  <li><b>Cổng 8000</b><span>Tắt server cũ trước</span></li>
+  <li><b>Docker Compose</b><span>Luôn có <code>-p</code> và <code>--build</code></span></li>
+  <li><b>Lệnh lỗi?</b><span>Xem mục “Lưu ý K5” trong README</span></li>
+</ol>
+""",
+    6: short_cp(
+        "CP0 · Chuẩn bị máy",
+        "14:00–14:10",
+        [("Fork + đổi tên", None), ("Clone", None), ("Kiểm Python, Docker", None), ("Windows: WSL2", None, "key")],
+        "<code>docker run --rm hello-world</code> chạy được",
+    ),
+    7: short_cp(
+        "CP1 · Laptop khác môi trường thật",
+        "14:10–14:30",
+        [("Chạy bản develop", None), ("Tìm ≥ 5 lỗi", "Kèm dòng code", "key"), ("So bản production", None), ("Ghi vào bài", None)],
+        "Mỗi lỗi chỉ ra được dòng code",
+    ),
+    8: short_cp(
+        "CP2 · Đóng gói bằng Docker",
+        "14:30–15:00",
+        [("Build 2 image", "Từ gốc repo"), ("Tự đo MB", "Tính % nhỏ hơn", "key"), ("Chạy stack", "compose up"), ("Tắt", "compose down")],
+        "Số MB là số máy bạn đo",
+    ),
+    9: short_cp(
+        "CP3 · Ba lớp bảo vệ",
+        "15:00–15:25",
+        [("Không key", "→ 401"), ("Có key", "→ 200"), ("Gọi quá nhanh", "→ 429", "key"), ("Hết ngân sách", "→ 402")],
+        "Dán kết quả <code>curl -i</code> thấy 401 · 200 · 429",
+    ),
+    10: short_cp(
+        "CP4 · Chạy nhiều bản cùng lúc",
+        "15:25–15:45 · nghỉ 5 phút",
+        [("Bật 3 bản agent", None), ("Gửi 5 câu", "Cùng một phiên"), ("Lịch sử vẫn còn", "Nhờ Redis", "key"), ("Tắt stack", None)],
+        "Giải thích được vì sao lịch sử không mất",
+    ),
+    11: f"""
+<h2 class="title">CP5 · Phần chính: PASS 12/12</h2>
+<p class="when">15:50–16:50 · 60/120 điểm</p>
+{flow(
+    ("Đọc bảng tiêu chí", None),
+    ("Sửa TODO", None),
+    ("Chạy script chấm", None),
+    ("Lặp lại", "Tới 12/12", "key"),
+    cls="flow--loop",
+)}
+<p class="big-result"><code>python check_production_ready.py</code> → <b>PASS 12/12</b></p>
+""",
+    12: """
+<h2 class="title">CP5 · Script chấm kiểm gì</h2>
+<ul class="chips">
+  <li><b>/health</b><span>luôn 200</span></li>
+  <li><b>/ready</b><span>503 khi mất Redis</span></li>
+  <li><b>/ask</b><span>200</span></li>
+  <li><b>Không key</b><span>401</span></li>
+  <li><b>Gọi quá nhanh</b><span>429</span></li>
+  <li><b>Hết ngân sách</b><span>402</span></li>
+  <li><b>Log</b><span>mỗi dòng là JSON</span></li>
+  <li><b>Tắt máy</b><span>xử lý xong rồi mới thoát</span></li>
+  <li><b>Image</b><span>slim · non-root · &lt; 500 MB</span></li>
+  <li><b>Deploy config</b><span>có health check</span></li>
+</ul>
+""",
+    13: short_cp(
+        "CP6 · Đưa agent lên mạng",
+        "16:50–17:15 · Railway hoặc Render",
+        [("Tạo Redis", "Trên nền tảng"), ("Đặt biến môi trường", "REDIS_URL, API key"), ("Deploy", "Agent Part 6", "key"), ("Tự kiểm", "4 lệnh")],
+        "4 lệnh ra <b>200 · 200 · 401 · 200</b>",
+    ),
+    14: short_cp(
+        "CP7 · Đo tốc độ và độ đúng",
+        "17:15–18:00",
+        [("Bật v1, v2", None), ("Đo tải", "1 · 10 · 50 · 100 người"), ("Chấm v1 vs v2", None), ("Sửa kiến thức", "Chấm lại tới 100%", "key")],
+        "Quality gate <b>PASS</b>, file JSON trong <code>reports/</code>",
+    ),
+    15: short_cp(
+        "CP8 · Giám sát (làm ở nhà)",
+        "Sau 18:00, trước hạn nộp",
+        [("Bật stack giám sát", None), ("Tạo tải", "1 bản rồi 3 bản"), ("Tìm request chậm, lỗi", None), ("Kích ≥ 2 cảnh báo", None), ("Chụp ảnh", "Rồi mới tắt", "key")],
+        "2 file CSV + 4 ảnh",
+    ),
+    16: """
+<h2 class="title">Bảng điểm</h2>
+<ol class="score">
+  <li style="--v:40"><b>40</b><span>Part 1–5</span><small>8 điểm mỗi phần</small></li>
+  <li style="--v:60" class="is-key"><b>60</b><span>Part 6 · Final</span><small>Đúng đủ điểm, sai 0</small></li>
+  <li style="--v:20"><b>20</b><span>Part 7 · Đo, giám sát</span><small>Số phải khớp file</small></li>
+</ol>
+<p class="score-note">Tối đa 120 → đổi về thang 100 · <b>cần 70 để qua</b></p>
+<p class="minus"><b>Bị trừ:</b> lộ key −10 · sai tên repo −5 · repo Private: không chấm</p>
+""",
+    17: """
+<h2 class="title">Trước khi nộp</h2>
+<div class="grid grid-2">
+  <ul class="checklist">
+    <li>Repo đúng tên, Public</li>
+    <li>PASS 12/12</li>
+    <li>URL chạy được</li>
+    <li>Báo cáo + ảnh đủ, số khớp file</li>
+    <li>Không có <code>.env</code>, key</li>
+  </ul>
+  <div class="stack">
+    <section class="panel">
+      <h3>Hạn nộp (GMT+7)</h3>
+      <p class="deadline">{{DEADLINE}}</p>
+    </section>
+    <div class="cta-row">
+      <button class="btn-primary" type="button" onclick="window.kickoffLab && window.kickoffLab()">Bắt đầu CP0</button>
+    </div>
+  </div>
+</div>
+""",
+}
+
 # 0 ── Title ─────────────────────────────────────────────────────────────
 slide(
     "Day 14: Deployment, Benchmark & Observability",
@@ -94,7 +328,7 @@ python check_production_ready.py
   <section><h2>Hình thức</h2><p>Bài cá nhân. 4 giờ tại lớp. Mock LLM, không cần API key LLM.</p></section>
   <section><h2>Chấm điểm</h2><p>Bài tối đa 120 điểm, đổi về thang 100. Cần 70/100 để qua.</p></section>
   <section><h2>Hạn nộp</h2><p>{{DEADLINE}} (GMT+7).</p></section>
-  <section><h2>Phím</h2><p><kbd>←</kbd> <kbd>→</kbd>: đổi slide. <kbd>N</kbd>: ghi chú.</p></section>
+  <section><h2>Phím</h2><p><kbd>←</kbd> <kbd>→</kbd>: đổi slide. <kbd>D</kbd>: chi tiết. <kbd>N</kbd>: ghi chú.</p></section>
 </div>
 """,
     notes(
